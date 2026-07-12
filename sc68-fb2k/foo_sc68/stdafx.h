@@ -5,6 +5,10 @@
 
 #pragma once
 
+#include <atomic>
+#include <cstring>
+#include <cstdio>
+
 #define  _CRT_SECURE_NO_WARNINGS 1
 
 #include <helpers/foobar2000+atl.h>

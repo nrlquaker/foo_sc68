@@ -40,8 +40,8 @@ static const GUID decoder_guid = { 0xe0bfcab0, 0x62e, 0x4cbd, { 0x80, 0x6e, 0x16
 // C-Tor: create sc68 instance
 input_sc68::input_sc68() {
   sc68_create_t create;
-  InterlockedIncrement(&g_instance);
-  ZeroMemory(&create, sizeof(create));
+  g_instance.fetch_add(1);
+  memset(&create, 0, sizeof(create));
   create.cookie = this;
 #ifdef _DEBUG
   create.emu68_debug = 1;
@@ -50,7 +50,7 @@ input_sc68::input_sc68() {
 #endif
   create.log2mem = 20;
   create.name = m_name;
-  _snprintf(m_name,sizeof(m_name),"fb2k#%05d", ++g_counter);
+  snprintf(m_name,sizeof(m_name),"fb2k#%05d", ++g_counter);
   create.sampling_rate = g_sampling_rate;
   m_sc68 = sc68_create(&create);
   if (!m_sc68) {
@@ -65,8 +65,8 @@ input_sc68::~input_sc68() {
   sc68_destroy(m_sc68);
   //InterlockedCompareExchangePointer(&g_playing_sc68,0,m_sc68);
   m_sc68 = 0;
-  InterlockedDecrement(&g_instance);
-  msg68_debug("input_sc68: %d instance remaining\n", (int)g_instance);
+  g_instance.fetch_sub(1);
+  msg68_debug("input_sc68: %d instance remaining\n", (int)g_instance.load());
 }
 
 //! Opens specified file for info read / decoding / info write. This is called only once, immediately after object creation, before any other methods, and no other methods are called if open() fails.
@@ -164,7 +164,7 @@ t_filestats input_sc68::get_file_stats(abort_callback & p_abort)
   return m_file->get_stats(p_abort);
 }
 
-t_filestats2 input_sc68::get_stats2(unsigned f, abort_callback& p_abort) 
+t_filestats2 input_sc68::get_stats2(unsigned f, abort_callback& p_abort)
 {
   return m_file->get_stats2_(f, p_abort);
 }
@@ -316,7 +316,7 @@ const GUID input_sc68::g_get_guid()
 }
 
 int input_sc68::g_counter = 0; // Counter used for naming newly created sc68 instance
-volatile LONG input_sc68::g_instance = 0; // Count exiting input_sc68 instances
+std::atomic<long> input_sc68::g_instance(0); // Count exiting input_sc68 instances
 static input_factory_t<input_sc68> g_input_sc68_factory;
 
 //volatile PVOID input_sc68::g_playing_sc68 = 0;
