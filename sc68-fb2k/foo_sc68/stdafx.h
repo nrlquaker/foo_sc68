@@ -5,9 +5,17 @@
 
 #pragma once
 
+#include <atomic>
+#include <cstring>
+#include <cstdio>
+
 #define  _CRT_SECURE_NO_WARNINGS 1
 
+#ifdef __APPLE__
+#include <helpers/foobar2000+atl.h>
+#else
 #include "foobar2000.h"
+#endif
 #include "sc68/file68_vfs_def.h"
 #include "sc68/file68_vfs.h"
 #include "sc68/file68.h"

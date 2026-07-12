@@ -37,8 +37,8 @@ volatile int g_sampling_rate  = 48000; // sampling rate in Hz
 // C-Tor: create sc68 instance
 input_sc68::input_sc68() {
   sc68_create_t create;
-  InterlockedIncrement(&g_instance);
-  ZeroMemory(&create, sizeof(create));
+  g_instance.fetch_add(1);
+  memset(&create, 0, sizeof(create));
   create.cookie = this;
 #ifdef _DEBUG
   create.emu68_debug = 1;
@@ -47,7 +47,7 @@ input_sc68::input_sc68() {
 #endif
   create.log2mem = 19;
   create.name = m_name;
-  _snprintf(m_name,sizeof(m_name),"fb2k#%05d", ++g_counter);
+  snprintf(m_name,sizeof(m_name),"fb2k#%05d", ++g_counter);
   create.sampling_rate = g_sampling_rate;
   m_sc68 = sc68_create(&create);
   if (!m_sc68) {
@@ -62,8 +62,8 @@ input_sc68::~input_sc68() {
   sc68_destroy(m_sc68);
   //InterlockedCompareExchangePointer(&g_playing_sc68,0,m_sc68);
   m_sc68 = 0;
-  InterlockedDecrement(&g_instance);
-  msg68_debug("input_sc68: %d instance remaining\n", (int)g_instance);
+  g_instance.fetch_sub(1);
+  msg68_debug("input_sc68: %d instance remaining\n", (int)g_instance.load());
 }
 
 //! Opens specified file for info read / decoding / info write. This is called only once, immediately after object creation, before any other methods, and no other methods are called if open() fails.
@@ -157,6 +157,11 @@ void input_sc68::get_info(t_uint32 p_subsong, file_info & p_info, abort_callback
 t_filestats input_sc68::get_file_stats(abort_callback & p_abort)
 {
   return filestats_invalid; // m_file->get_stats(p_abort);
+}
+
+t_filestats2 input_sc68::get_stats2(uint32_t p_flags, abort_callback & p_abort)
+{
+  return filestats2_invalid;
 }
 
 void input_sc68::decode_initialize(t_uint32 p_subsong,unsigned p_flags,abort_callback & p_abort)
@@ -271,6 +276,11 @@ void input_sc68::retag_commit(abort_callback & p_abort)
   throw exception_io_unsupported_format();
 }
 
+void input_sc68::remove_tags(abort_callback & p_abort)
+{
+  throw exception_io_unsupported_format();
+}
+
 bool input_sc68::g_is_our_content_type(const char * p_content_type)
 {
   bool ret = !stricmp_utf8(sc68_mimetype(), p_content_type);
@@ -289,8 +299,22 @@ bool input_sc68::g_is_our_path(const char * p_path,const char * p_extension)
   return ret;
 }
 
+// GUID: identifies the sc68 input class to the foobar2000 core
+static const GUID guid_input_sc68 =
+  { 0xa8b3c4d5, 0xe6f7, 0x4801, { 0x92, 0x34, 0x56, 0x78, 0x90, 0xab, 0xcd, 0xe1 } };
+
+GUID input_sc68::g_get_guid()
+{
+  return guid_input_sc68;
+}
+
+const char * input_sc68::g_get_name()
+{
+  return "SC68";
+}
+
 int input_sc68::g_counter = 0; // Counter used for naming newly created sc68 instance
-volatile LONG input_sc68::g_instance = 0; // Count exiting input_sc68 instances
+std::atomic<long> input_sc68::g_instance(0); // Count exiting input_sc68 instances
 static input_factory_t<input_sc68> g_input_sc68_factory;
 
 //volatile PVOID input_sc68::g_playing_sc68 = 0;

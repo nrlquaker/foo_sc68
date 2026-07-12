@@ -39,14 +39,19 @@ static pfc::string_formatter g_get_component_about()
     "\n" << sc68_versionstr() <<
     "\n" << file68_versionstr() <<
     "\n"
-    "\n" "Copyright (C) 2001-2015 Benjamin Gerard.";
+#ifdef __APPLE__
+    "\n" "macOS support by nrlquaker (https://github.com/nrlquaker/foo_sc68)"
+    "\n"
+#endif
+    "\n" "Copyright (C) 2001-2015 Benjamin Gerard."
+    ;
   return about;
 }
 
 // Declare our component
 DECLARE_COMPONENT_VERSION(
   "sc68 for foobar2000",
-  "0.7.0",
+  "0.7.1",
   g_get_component_about()
 );
 

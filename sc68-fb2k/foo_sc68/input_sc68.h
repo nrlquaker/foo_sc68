@@ -30,7 +30,7 @@
 #define DBG(fmt,...) for(;0;)
 #endif
 
-class input_sc68 {
+class input_sc68 : public input_stubs {
 
 public:
   char m_name[16];
@@ -40,7 +40,7 @@ public:
   t_uint32 m_subsong;          // current subsong for seek support
 
   static int g_counter;
-  static volatile LONG g_instance;
+  static std::atomic<long> g_instance;
 
   input_sc68();
   ~input_sc68();
@@ -50,20 +50,24 @@ public:
   void open(service_ptr_t<file>,
             const char *, t_input_open_reason, abort_callback &);
   unsigned get_subsong_count();
-  t_uint32 input_sc68::get_subsong(unsigned);
+  t_uint32 get_subsong(unsigned);
   void get_info(t_uint32, file_info &, abort_callback &);
   t_filestats get_file_stats(abort_callback & p_abort);
+  t_filestats2 get_stats2(uint32_t, abort_callback &);
   void decode_initialize(t_uint32,unsigned,abort_callback &);
   bool decode_run(audio_chunk &,abort_callback &);
-  void input_sc68::decode_seek(double,abort_callback &);
+  void decode_seek(double,abort_callback &);
   bool decode_can_seek();
   bool decode_get_dynamic_info(file_info &, double &);
   bool decode_get_dynamic_info_track(file_info &, double &);
   void decode_on_idle(abort_callback &);
   void retag_set_info(t_uint32,const file_info &,abort_callback &);
   void retag_commit(abort_callback &);
+  void remove_tags(abort_callback &);
   static bool g_is_our_content_type(const char *);
   static bool g_is_our_path(const char *,const char *);
+  static GUID g_get_guid();
+  static const char * g_get_name();
 };
 
 extern volatile int g_ym_engine;

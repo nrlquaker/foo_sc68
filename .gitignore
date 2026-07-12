@@ -52,3 +52,13 @@ m4/lt~obsolete.m4
 # can automatically generate from config.status script
 # (which is called by configure script))
 Makefile
+
+# macOS foobar2000 component build output
+/sc68-fb2k-mac/build/
+# sc68-fb2k-mac/Makefile is hand-written (not autotools-generated), keep it
+!/sc68-fb2k-mac/Makefile
+
+# Downloaded foobar2000 SDK (build prerequisite for sc68-fb2k-mac/Makefile,
+# see its header comment for the exact version/source). Not ours to
+# redistribute as part of this repo; re-download instead of committing it.
+/SDK-2025-03-07/

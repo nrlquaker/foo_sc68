@@ -50,7 +50,11 @@ static void message_cb(const int bit, sc68_t * sc68, const char *fmt, va_list li
     if (bit < msg68_DEBUG)
       console::print(temp);
     else
+#ifdef _WIN32
       OutputDebugStringA(temp.toString());
+#else
+      console::print(temp);
+#endif
     break;
   }
 }

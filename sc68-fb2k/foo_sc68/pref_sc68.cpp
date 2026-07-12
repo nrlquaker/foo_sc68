@@ -126,6 +126,15 @@ void apply_sc68_preferences()
   sc68_cntl(0, SC68_SET_OPT_INT, "ym-volmodel",   (int) cfg_volmodel);
   sc68_cntl(0, SC68_SET_OPT_INT, "amiga-blend",   (int) cfg_blend);
   sc68_cntl(0, SC68_SET_OPT_INT, "amiga-filter",  (int) cfg_amiga_filter);
+
+  /* SC68_SET_OPT_INT only updates the live option68 store; libsc68's
+   * "default-time" fallback track length (api68.c: calc_track_len) is
+   * read from a separate process-wide snapshot that SC68_SET_OPT_INT
+   * never touches, so it would otherwise stay stuck at whatever it was
+   * when sc68_init() first ran. SC68_CONFIG_SAVE + SC68_CONFIG_LOAD
+   * forces that snapshot to refresh from the option68 store we just set. */
+  sc68_cntl(0, SC68_CONFIG_SAVE);
+  sc68_cntl(0, SC68_CONFIG_LOAD);
 }
 
 
