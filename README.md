@@ -14,6 +14,10 @@ Based on https://sourceforge.net/p/sc68/code/HEAD/tree r600 version (2015-11-28)
 
 5. Merged SNDH Database of r713 to this version 
 
+## Compatibility
+- foobar2000 **v2.0 or newer**, Windows, 32-bit **ONLY**.
+- Built against the foobar2000 SDK (2025-03-07).
+
 ## Building from source
 
 ### Prerequisites
