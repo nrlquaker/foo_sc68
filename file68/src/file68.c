@@ -664,8 +664,17 @@ static int valid(disk68_t * mb)
   for (m = mb->mus, i = 0; m < mb->mus + mb->nb_mus; m++, i++) {
 
     /* Default load address */
-    if ( (m->has.pic = !m->a0) )
-      m->a0 = SC68_LOADADDR;
+      if ((m->has.pic = !m->a0)) {
+          if (!strcmp68(m->replay, "jamcrackerpro")) {
+              m->a0 = 0x8000;
+          }
+          else {
+              m->a0 = SC68_LOADADDR;
+          }
+          
+
+    }
+      
 
     /* Default replay frequency is 50Hz */
     if (!m->frq)

@@ -23,7 +23,7 @@
  */
 
 #include "stdafx.h"
-#include "pref_resource.h"
+#include "resource.h"
 #include "sc68/file68_opt.h"
 
 #include <commctrl.h>
@@ -144,8 +144,8 @@ static void populate_combo_from_opt(HWND hdlg, int idc, const char *optkey)
   if (opt && opt->type == opt68_ENU) {
     const char **names = (const char **) opt->set;
     for (unsigned i = 0; i < opt->sets; i++) {
-      SendMessageA(hcb, CB_ADDSTRING, 0,
-                   (LPARAM)(names[i] ? names[i] : "<unknown>"));
+      if (!strcmp68(optkey, "ym-engine") && !strcmp68(names[i], "dump")) continue;
+      SendMessageA(hcb, CB_ADDSTRING, 0, (LPARAM)(names[i] ? names[i] : "<unknown>"));
     }
   }
 }
@@ -459,13 +459,12 @@ public:
 
 class sc68_pref_page : public preferences_page_v3 {
 public:
-  preferences_page_instance::ptr instantiate(HWND parent,
-                                             preferences_page_callback::ptr callback)
+  preferences_page_instance::ptr instantiate(HWND parent, preferences_page_callback::ptr callback)
   {
     return new service_impl_t<sc68_pref_instance>(parent, callback);
   }
 
-  const char * get_name() { return "SC68"; }
+  const char * get_name() { return "SC68 input"; }
 
   GUID get_guid() { return guid_sc68_pref_page; }
 

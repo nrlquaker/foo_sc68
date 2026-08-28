@@ -33,6 +33,9 @@ volatile int g_ym_engine      = 0;     // YM engine (blep or pulse)
 volatile int g_ym_filter      = 0;     // YM filter for pulse
 volatile int g_ym_asid        = 0;     // aSID (off/on/force)
 volatile int g_sampling_rate  = 48000; // sampling rate in Hz
+// {E0BFCAB0-062E-4CBD-806E-16B481ADBE24}
+static const GUID decoder_guid = { 0xe0bfcab0, 0x62e, 0x4cbd, { 0x80, 0x6e, 0x16, 0xb4, 0x81, 0xad, 0xbe, 0x24 } };
+
 
 // C-Tor: create sc68 instance
 input_sc68::input_sc68() {
@@ -45,7 +48,7 @@ input_sc68::input_sc68() {
 #else
   create.emu68_debug = 0;
 #endif
-  create.log2mem = 19;
+  create.log2mem = 20;
   create.name = m_name;
   _snprintf(m_name,sizeof(m_name),"fb2k#%05d", ++g_counter);
   create.sampling_rate = g_sampling_rate;
@@ -81,7 +84,8 @@ void input_sc68::open(service_ptr_t<file> p_filehint, const char * p_path, t_inp
   // our input does not support retagging.
   if (p_reason == input_open_info_write)
     throw exception_io_unsupported_format(); 
-
+  m_file = p_filehint;
+  input_open_file_helper(m_file, p_path, p_reason, p_abort);
   vfs68_t  * is = vfs68_fb2k_create(/*m_file = */p_filehint, p_path, p_reason, p_abort);
   vfs68_open(is);
   int ret = sc68_load(m_sc68, is);
@@ -128,9 +132,10 @@ void input_sc68::get_info(t_uint32 p_subsong, file_info & p_info, abort_callback
   }
 
   p_info.set_length(use->trk.time_ms/1000u);
-  p_info.info_set("codec","sc68");
+  pfc::string8 codec(use->dsk.tag[TAG68_ID_FORMAT].val);
+  p_info.info_set("codec", codec.upperCase());
 
-  p_info.info_set("encoding",use->dsk.tag[TAG68_ID_FORMAT].val);
+  p_info.info_set("encoding","synthesized");
   p_info.info_set_int("samplerate", sc68_cntl(m_sc68, SC68_GET_SPR));
   p_info.info_set_int("channels",2);
   p_info.info_set_int("bitspersample", 16);
@@ -156,7 +161,12 @@ void input_sc68::get_info(t_uint32 p_subsong, file_info & p_info, abort_callback
 //! See: input_info_reader::get_file_stats(). Valid after open() with any reason.
 t_filestats input_sc68::get_file_stats(abort_callback & p_abort)
 {
-  return filestats_invalid; // m_file->get_stats(p_abort);
+  return m_file->get_stats(p_abort);
+}
+
+t_filestats2 input_sc68::get_stats2(unsigned f, abort_callback& p_abort) 
+{
+  return m_file->get_stats2_(f, p_abort);
 }
 
 void input_sc68::decode_initialize(t_uint32 p_subsong,unsigned p_flags,abort_callback & p_abort)
@@ -271,6 +281,12 @@ void input_sc68::retag_commit(abort_callback & p_abort)
   throw exception_io_unsupported_format();
 }
 
+void input_sc68::remove_tags(abort_callback&)
+{
+  DBG("SC68 component: remove tags\n");
+  throw exception_io_unsupported_format();
+}
+
 bool input_sc68::g_is_our_content_type(const char * p_content_type)
 {
   bool ret = !stricmp_utf8(sc68_mimetype(), p_content_type);
@@ -287,6 +303,16 @@ bool input_sc68::g_is_our_path(const char * p_path,const char * p_extension)
     !stricmp_utf8(p_extension, "snd");
   DBG("SC68 component: is our file: '%s' ? %s\n", p_path, ret ? "yes" : "no");
   return ret;
+}
+
+const char* input_sc68::g_get_name()
+{
+    return "SC68 Decoder";
+}
+
+const GUID input_sc68::g_get_guid()
+{
+    return decoder_guid;
 }
 
 int input_sc68::g_counter = 0; // Counter used for naming newly created sc68 instance

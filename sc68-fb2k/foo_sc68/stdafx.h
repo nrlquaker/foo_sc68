@@ -7,7 +7,7 @@
 
 #define  _CRT_SECURE_NO_WARNINGS 1
 
-#include "foobar2000.h"
+#include <helpers/foobar2000+atl.h>
 #include "sc68/file68_vfs_def.h"
 #include "sc68/file68_vfs.h"
 #include "sc68/file68.h"

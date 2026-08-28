@@ -56,46 +56,56 @@ static void message_cb(const int bit, sc68_t * sc68, const char *fmt, va_list li
 }
 
 // Implements initquit callback.
-class initquit_sc68 : public initquit {
-public:
+namespace {
+    // On init: initialize sc68 library.
+    void on_init() {
+        static char* argv[] = { "fb2k" };
+        sc68_init_t init;
+        memset(&init, 0, sizeof(init));
+        init.argc = sizeof(argv) / sizeof(*argv);
+        init.argv = argv;
+        init.debug_clr_mask = 0;
+        init.debug_set_mask = 0;
+        init.msg_handler = (sc68_msg_t)message_cb;
+        #ifdef NDEBUG
+            init.debug_clr_mask = -1;
+        #elif defined(_DEBUG)
+            init.debug_set_mask = (1 << msg68_TRACE) - 1;
+        #endif
+        if (!sc68_init(&init)) {
+            int engine = 0;
 
-  // On init: initialize sc68 library.
-  void on_init() {
-    static char * argv[] = { "fb2k" };
-    sc68_init_t init;
-    memset(&init,0,sizeof(init));
-    init.argc = sizeof(argv)/sizeof(*argv);
-    init.argv = argv;
-    init.debug_clr_mask = 0;
-    init.debug_set_mask = 0;
-    init.msg_handler    = (sc68_msg_t) message_cb;
-#ifdef NDEBUG
-    init.debug_clr_mask = -1;
-#elif defined(_DEBUG)
-    init.debug_set_mask = (1 << msg68_TRACE) - 1;
-#endif
-    if (!sc68_init(&init)) {
-      // Apply saved preferences from foobar2000 cfg_vars
-      // (overrides sc68 library defaults with our persistent settings)
-      apply_sc68_preferences();
+            // aSID
+            g_ym_asid = sc68_cntl(0, SC68_GET_ASID);
+            if (g_ym_asid < 0 || g_ym_asid > 2)
+                g_ym_asid = SC68_ASID_ON;
+            msg68_debug("got default aSID: %d\n", g_ym_asid);
+            sc68_cntl(0, SC68_SET_ASID, SC68_ASID_ON); // Activate global aSID
+
+            // YM-engine
+            if (!sc68_cntl(0, SC68_GET_OPT, "ym-engine", &engine)) {
+                msg68_debug("got default engine: '%d'\n", engine);
+                g_ym_engine = !!engine;
+            }
+        }
+        msg68_notice("SC68 component: %s - %s [%s]",
+            __DATE__, __TIME__,
+        #ifdef _DEBUG
+            "Debug"
+        #else
+            "Release"
+        #endif
+        );
     }
-    msg68_notice("SC68 component: %s - %s [%s]",
-      __DATE__, __TIME__,
-#ifdef _DEBUG
-      "Debug"
-#else
-      "Release"
-#endif
-      ); 
-  }
 
-  // On quit: save sc68 config and shutdown library
-  void on_quit() {
-    // Ensure sc68 internal config matches our preferences before saving
-    apply_sc68_preferences();
-    sc68_cntl(0, SC68_CONFIG_SAVE);
-    sc68_shutdown();
-  }
-};
+    // On quit: shutdown sc68 library
+    void on_quit() {
+        sc68_cntl(0, SC68_SET_OPT_INT, "ym-engine", !!g_ym_engine);
+        sc68_cntl(0, SC68_SET_ASID, SC68_ASID_ON);
+        sc68_cntl(0, SC68_CONFIG_SAVE);
+        sc68_shutdown();
+    }
 
-static initquit_factory_t<initquit_sc68> g_initquit_sc68_factory;
+    FB2K_ON_INIT_STAGE(on_init, init_stages::after_config_read);
+    FB2K_RUN_ON_QUIT(on_quit);
+}

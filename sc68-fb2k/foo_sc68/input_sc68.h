@@ -30,7 +30,7 @@
 #define DBG(fmt,...) for(;0;)
 #endif
 
-class input_sc68 {
+class input_sc68 : public input_stubs {
 
 public:
   char m_name[16];
@@ -38,6 +38,7 @@ public:
   sc68_minfo_t m_fileinfo;
   int m_sampling_rate;
   t_uint32 m_subsong;          // current subsong for seek support
+  service_ptr_t<file> m_file;
 
   static int g_counter;
   static volatile LONG g_instance;
@@ -52,6 +53,7 @@ public:
   unsigned get_subsong_count();
   t_uint32 input_sc68::get_subsong(unsigned);
   void get_info(t_uint32, file_info &, abort_callback &);
+  t_filestats2 get_stats2(unsigned f, abort_callback& p_abort);
   t_filestats get_file_stats(abort_callback & p_abort);
   void decode_initialize(t_uint32,unsigned,abort_callback &);
   bool decode_run(audio_chunk &,abort_callback &);
@@ -62,8 +64,11 @@ public:
   void decode_on_idle(abort_callback &);
   void retag_set_info(t_uint32,const file_info &,abort_callback &);
   void retag_commit(abort_callback &);
+  void remove_tags(abort_callback&);
   static bool g_is_our_content_type(const char *);
   static bool g_is_our_path(const char *,const char *);
+  static const char* g_get_name();
+  static const GUID g_get_guid();
 };
 
 extern volatile int g_ym_engine;

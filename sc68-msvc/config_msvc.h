@@ -3,7 +3,6 @@
 #ifndef inline
 # define inline __inline
 #endif
-#define snprintf _snprintf
 #define strcasecmp stricmp
 
 #undef HAVE_DECLSPEC

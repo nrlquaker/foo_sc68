@@ -3,7 +3,7 @@
  * @brief   music duration database
  * @author  http://sourceforge.net/users/benjihan
  *
- * Copyright (c) 1998-2015 Benjamin Gerard
+ * Copyright (c) 1998-2016 Benjamin Gerard
  *
  * This program is free software: you can redistribute it and/or
  * modify it under the terms of the GNU General Public License as
@@ -25,18 +25,19 @@
 #ifdef HAVE_CONFIG_H
 # include "config.h"
 #endif
+#include "file68_private.h"
 #include "file68_tdb.h"
 
 #include <stdlib.h>
 
 #define HBIT 32                         /* # of bit for hash     */
 #define TBIT 6                          /* # of bit for track    */
-#define WBIT 5                          /* # of bit for hardware */
+#define WBIT 6                          /* # of bit for hardware */
 #define FBIT (64-HBIT-TBIT-WBIT)        /* # of bit for frames   */
 #define HFIX (32-HBIT)
 
 #define TIMEDB_ENTRY(HASH,TRACK,FRAMES,FLAGS) \
-  { 0x##HASH>>HFIX, TRACK, FLAGS, FRAMES }
+  { 0x##HASH>>HFIX, TRACK-1, FLAGS, FRAMES }
 #define E_EMPTY { 0,0,0,0 }
 
 
@@ -54,12 +55,12 @@ typedef struct {
 #if HAVE_TIMEDB_INC_H
 
 #define STE TDB_STE
-#define YM  ( TDB_TA + TDB_TB + TDB_TC + TDB_TD )
-#define TA  -TDB_TA
-#define TB  -TDB_TB
-#define TC  -TDB_TC
-#define TD  -TDB_TD
-#define NA  -YM
+#define YM  TDB_PSG
+#define TA  TDB_TA
+#define TB  TDB_TB
+#define TC  TDB_TC
+#define TD  TDB_TD
+#define NA  0
 
 static dbentry_t db[] = {
 # include "timedb.inc.h"
