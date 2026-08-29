@@ -1,10 +1,12 @@
+A foobar2000 input decodes `.sc68`, `.sndh`, `.snd` format.
+
 Based on https://sourceforge.net/p/sc68/code/HEAD/tree r600 version (2015-11-28)
 
 (Since I think this is the best version for emul effect through my test)
 
 ## Changes I made:
 
-1. Move configuration from **right-click menu** to **Preferences → Playback → Decoding → SC68** and fixed the issue that the change in config can't be applied immediately.
+1. Move configuration from **right-click menu** to **Preferences → Playback → Decoding → SC68 input** and fixed the issue that the change in config can't be applied immediately.
 
 2. Added seeking function. Now you can seeking sc68 songs!
 
